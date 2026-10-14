@@ -1,22 +1,24 @@
 # Net Zero Portfolio Game
 
 A web version of the Net Zero Portfolio Game for Climate Change Week (Credibl × BNY Pune).
-Individual play. Players join with their name and a 4-digit PIN, build a portfolio from 15 fictional
-companies, and lock it each round. The game master reveals one news item per round, and a live
+Individual play: players join with their name and a 4-digit PIN, build a portfolio from 15 fictional
+companies and lock it each round. The game master reveals one news item per round, and a live
 leaderboard updates for everyone. All companies and figures are fictional.
 
-## Files
+## Game master sign-in
 
-| File | What it does |
-|---|---|
-| `app.py` | The Streamlit app: player pages and the game master pages |
-| `engine.py` | Scoring rules (same numbers as the Excel master). Edit game parameters here |
-| `game_data.py` | The 15 companies, their figures and analyst notes |
-| `storage.py` | Shared game state, saved in a small SQLite file (`game_state.db`) |
-| `tests/test_engine.py` | Checks the scoring matches the Excel master |
-| `.streamlit/config.toml` | Colours and settings |
+The username and password are in `.streamlit/secrets.toml`:
 
-## Option 1: Run it on your laptop (good for an internal test)
+```
+GM_USER = "gamemaster"
+GM_PASSWORD = "..."
+```
+
+Keep that file private. It is excluded from Git. If you deploy online, paste the same two lines into the
+host's Secrets settings (see Option 2). Without a secrets file, the fallback is `gamemaster` / `credibl-gm`,
+and the app shows a warning.
+
+## Option 1: Run it on your laptop (best for an internal test)
 
 1. Install Python 3.10 or newer.
 2. In this folder, run:
@@ -25,60 +27,64 @@ leaderboard updates for everyone. All companies and figures are fictional.
    streamlit run app.py
    ```
 3. Your browser opens the game. The terminal also shows a **Network URL** (like `http://192.168.1.20:8501`).
-   Colleagues on the same Wi-Fi can open that link on their phones or laptops to play.
+   Colleagues on the same Wi-Fi open that link on their phones or laptops to play.
+   If they can't connect, allow Python through your firewall when Windows or macOS asks, or use Option 2.
 
 ## Option 2: Put it online with Streamlit Community Cloud (free)
 
-1. Create a GitHub repository and upload everything in this folder (keep the `.streamlit` folder).
-   Do not upload `game_state.db` if one exists.
+1. Create a GitHub repository and upload everything in this folder **except** `.streamlit/secrets.toml`
+   and any `game_state.db` file.
 2. Go to https://share.streamlit.io, sign in with GitHub, and choose **Create app**.
 3. Pick your repository, branch `main`, and main file `app.py`.
-4. Open **Advanced settings → Secrets** and add:
-   ```
-   GM_PASSWORD = "choose-a-strong-password"
-   ```
+4. Open **Advanced settings → Secrets** and paste the two lines from `.streamlit/secrets.toml`.
 5. Deploy. You get a link like `https://your-app-name.streamlit.app` to share.
 
-**Before the real event:**
-- Check with BNY IT that staff can open `*.streamlit.app` on the office network and on phones.
-- Free hosting can restart or put the app to sleep when nobody uses it, which wipes the game data.
-  Open the app shortly before each round, and download a backup after each round
-  (Game master → Backup and reset). You can restore it in one click.
-- For a large office, a paid host (for example Render, Railway or Azure App Service) is more reliable.
-  The app runs there unchanged with `streamlit run app.py`.
+**Before the real event:** check with BNY IT that staff can open `*.streamlit.app` links. Free hosting can
+restart when idle and wipe the game data, so download a backup after each round (Backup and reset tab).
 
-## Running the game (game master)
+## Running a quick game (30-60 minutes)
 
-Open the app, choose **Game master** in the sidebar (on a phone, tap the arrow at the top left) and enter
-the password. The default is `credibl-gm` if you haven't set `GM_PASSWORD`; change it before sharing the link.
+1. Open the app, choose **Game master** in the sidebar (on a phone, tap the arrow at the top left), and sign in.
+2. **Run the game → Game length and timer:** choose *Quick game* and set the minutes per round (5-6 works well).
+3. Share the link. Players join and can lock a round 1 portfolio straight away.
+4. Press **Start timer**. Everyone sees a countdown. When it hits zero, locking stops automatically.
+   Use **+1 minute** if people need more time, or **End round now** to stop early.
+5. Tick **Ready to reveal**, then press **Reveal news**. This scores the round, posts the news to every
+   player, and starts the next round's timer automatically.
+6. Repeat until news 4. Round 4 is the final lock: portfolios must be within the carbon budget to win.
+7. Put the **Presenter screen** tab on the big screen: it shows the countdown, the latest news and the leaderboard.
 
-| When | Do this |
+Players' screens update by themselves within a few seconds when you start a timer or reveal news.
+
+For the full-week version, choose *Full week (no timer)*. You then close rounds yourself (for example at 5 pm)
+and reveal each morning.
+
+## Changing shocks during the game
+
+**Shocks and rules** tab:
+- Switch any news item's shock **on or off**. A shock that is off becomes a "quiet day in the markets" for players.
+  Switching off the greenwash exposé means EverGreen's true figures are never revealed.
+- Change each shock's size, for example a bigger flood or a smaller green-steel jump.
+- Change the rules: the carbon budget, the maximum % in one company, and the minimum number of holdings.
+- Press **Save changes**. The preview table shows every company's return per round under your settings.
+
+A news item's settings are saved at the moment you reveal it, so changes only affect news not yet revealed.
+Revealed news shows as locked. **Undo the last reveal** unlocks it again (handy when testing).
+
+## Other game master tools
+
+- **Players:** who has locked each round, reset a forgotten PIN, remove a test player, download the leaderboard (CSV).
+- **Backup and reset:** download or restore a backup, or reset the game. "Keep players" clears only portfolios
+  and news; your shock settings and timer are kept.
+
+## Files
+
+| File | What it does |
 |---|---|
-| Monday | Share the link. Players join and lock their round 1 portfolio |
-| 5 pm each day (optional) | **Close round** so nobody can change their portfolio |
-| Next morning | **Reveal news** (tick the box, then press the button). This scores the locked portfolios and opens the next round |
-| Thursday | Round 4 is the final lock: portfolios must be within the carbon budget to win |
-| Friday finale | Reveal news 4, then show the **Presenter screen** on the big screen |
-
-Other tools:
-- **Undo the last reveal**, if you press it by mistake or during a test.
-- **Players**: see who has locked each round, reset a forgotten PIN, remove a test player, and download the leaderboard as CSV.
-- **Backup and reset**: download or restore a backup, or reset the game. "Keep players" clears only portfolios and news.
-
-For a quick 45-minute internal test, run all four rounds back to back, giving players about 5 minutes per round.
-
-## Rules players see
-
-- Start with ₹100 crore. Hold at least 5 companies, no more than 25% in any one, weights adding up to 100%.
-- Each news item hits the portfolio locked before it, so players can't dodge it.
-- No new portfolio means the previous one carries over. Late joiners hold cash (0% return) until their first lock.
-- To win, the final (round 4) portfolio must have a carbon intensity at or below 27.25 tCO₂e per ₹ crore.
-- Final points: 300 / 200 / 100 for the top three within budget, plus 50 for everyone within budget.
-
-## Changing the game
-
-- Company figures and analyst notes: `game_data.py`.
-- Shock sizes, budget cut, holding rules: the constants at the top of `engine.py`.
-- News text: `NEWS` in `engine.py`.
-- After a change, run `python tests/test_engine.py`. The test that compares against the Excel master will fail
-  if you changed the numbers on purpose; update its expected values.
+| `app.py` | The Streamlit app: player pages and game master pages |
+| `engine.py` | Scoring rules and default shock settings (same numbers as the Excel master) |
+| `game_data.py` | The 15 companies, their figures and analyst notes |
+| `storage.py` | Shared game state, saved in a small SQLite file (`game_state.db`) |
+| `tests/test_engine.py` | Checks scoring against the Excel master and the shock settings rules |
+| `.streamlit/config.toml` | Colours and settings |
+| `.streamlit/secrets.toml` | Game master username and password (private) |
